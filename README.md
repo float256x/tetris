@@ -1,6 +1,8 @@
 # tetris
 
-HTMX frontend, zig backend, just like the lord intended.
+_HTMX frontend, zig backend, just like the lord intended._
+
+![Nice screenshot, bro](docs/screenshot.png)
 
 ## Build and run
 
