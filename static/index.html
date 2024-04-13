@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>T E T R I S.</title>
+    <script src="https://unpkg.com/htmx.org@1.9.11"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Victor+Mono:ital,wght@0,100..700;1,100..700&display=swap"
+        rel="stylesheet">
+    <style>
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: black;
+            color: #78a;
+            font-family: "Victor Mono", monospace;
+        }
+
+        h1 {
+            font-size: 40px;
+            font-optical-sizing: auto;
+            font-weight: 700;
+            font-style: normal;
+            /* color: #456; */
+            color: #457;
+        }
+
+        a,
+        a:visited,
+        a:active {
+            color: #457;
+            text-decoration: none;
+            font-weight: bold;
+            border: 1px solid #457;
+            padding: 10px 78px;
+            border-radius: 3px;
+            font-size: 18px;
+        }
+
+        a:hover {
+            color: #1982c4;
+            border: 1px solid #1982c4;
+        }
+
+        #root {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            width: 348px;
+            margin-top: 50px;
+        }
+
+        #root .row {
+            display: flex;
+        }
+
+        #root .column70 {
+            flex: 70%;
+            font-size: 0;
+        }
+
+        #root .column30 {
+            flex: 30%;
+        }
+
+        #controls {
+            margin: 15px 0;
+        }
+
+        #gamestate div.gameover {
+            font-size: 24px;
+            text-align: center;
+            color: #ff595e;
+            margin: 10px 0 10px 0;
+            border-top: 1px solid #ff595e;
+            border-bottom: 1px solid #ff595e;
+            padding: 5px;
+        }
+
+        #statusbar {
+            display: none;
+            font-size: 11px;
+            background-color: black;
+            color: white;
+            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+            height: 16px;
+            padding: 3px 6px 3px 12px;
+            margin: 15px 0;
+            font-variant: small-caps;
+        }
+
+        #score {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 22px;
+            font-weight: bold;
+            color: #1982c4;
+            margin: 10px 0 0 20px;
+        }
+
+        #block_preview {
+            font-size: 0;
+            margin-left: 20px;
+        }
+
+        #block_preview .cell {
+            display: inline-block;
+            margin: 4px 4px 0 0;
+            width: 14px;
+            height: 14px;
+            border-radius: 2px;
+        }
+
+        .cell {
+            display: inline-block;
+            margin: 4px 4px 0 0;
+            width: 20px;
+            height: 20px;
+            border-radius: 2px;
+        }
+
+        .hidden {
+            opacity: 0;
+        }
+
+        .empty {
+            background-color: #124;
+        }
+
+        .color0 {
+            background-color: #1bc;
+        }
+
+        .color1 {
+            background-color: #1982c4;
+        }
+
+        .color2 {
+            background-color: #ff895e;
+        }
+
+        .color3 {
+            background-color: #ff493e;
+        }
+
+        .color4 {
+            background-color: #8ac926;
+        }
+
+        .color5 {
+            background-color: #6a4c93;
+        }
+
+        .color6 {
+            background-color: #ffca3a;
+        }
+    </style>
+    <script>
+        let intervalID;
+
+        function sendCommand(event) {
+            const keyName = event.key;
+            // event.preventDefault();
+            fetch("http://127.0.0.1:8080/command", {
+                method: "POST",
+                body: keyName,
+            })
+                .then((response) => response.text())
+                .then((text) => {
+                    document.getElementById("gamestate").innerHTML = text;
+                });
+        }
+        document.addEventListener(
+            "keydown",
+            (event) => {
+                const keyName = event.key;
+                if (["ArrowUp", " ", "Enter"].includes(keyName)) {
+                    clearInterval(intervalID);
+                    sendCommand(event);
+                }
+                if (["ArrowRight", "ArrowLeft", "ArrowDown"].includes(keyName)) {
+                    clearInterval(intervalID);
+                    sendCommand(event);
+                    intervalID = setInterval(sendCommand, 150, event);
+                }
+            },
+            false,
+        );
+        document.addEventListener(
+            "keyup",
+            (event) => {
+                const keyName = event.key;
+                if (["ArrowRight", "ArrowLeft", "ArrowDown"].includes(keyName)) {
+                    clearInterval(intervalID);
+                }
+            },
+            false,
+        );
+
+    </script>
+</head>
+
+<body>
+    <div id="root">
+        <h1>T E T R I S</h1>
+        <div id="controls"><a href="javascript:return false;" hx-post='/start' hx-target='#statusbar'
+                onclick="blur()">NEW GAME</a>
+        </div>
+        <div id="gamestate" hx-get='/gamestate' hx-trigger='every 50ms'></div>
+        <div id="statusbar">▰ Status bar</div>
+    </div>
+</body>
+
+</html>
