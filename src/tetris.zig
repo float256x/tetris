@@ -17,7 +17,7 @@ last_step_milli_timestamp: i64,
 
 pub fn init() !Game {
     var seed: u64 = undefined;
-    try std.os.getrandom(std.mem.asBytes(&seed));
+    try std.posix.getrandom(std.mem.asBytes(&seed));
     var rg = std.rand.DefaultPrng.init(seed);
 
     const active_block = rg.random().intRangeAtMost(u8, 1, 8);
