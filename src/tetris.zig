@@ -82,7 +82,6 @@ pub fn tick(self: *Game) bool {
         self.last_step_milli_timestamp = now;
         const new_state = step(state, &self.random_gen);
         self.state.set(new_state);
-        //self.printState(); // TODO move?
         if (state.active_block != new_state.active_block) {
             self.command_queue.clear();
         }
@@ -98,21 +97,6 @@ pub fn tick(self: *Game) bool {
 
 pub fn sendCommand(self: *Game, c: Command) void {
     self.command_queue.prepend(c);
-}
-
-fn printState(self: *Game) void {
-    const state = self.state.get();
-    print("\n", .{});
-    for (0..rows) |i| {
-        if (i == hidden_rows) {
-            print("|{s}|\n", .{"--" ** cols});
-        }
-        print("|", .{});
-        for (0..cols) |j| {
-            print("{} ", .{state.matrix[i * cols + j]});
-        }
-        print("|\n", .{});
-    }
 }
 
 fn handleCommand(state: State, command: Command) State {
@@ -147,9 +131,44 @@ fn handleCommand(state: State, command: Command) State {
         }
     }
     if (command == .Rotate) {
-        return blockRotate(state);
+        return rotateActiveBlock(state);
     }
     unreachable;
+}
+
+fn step(state: State, random_gen: *std.rand.DefaultPrng) State {
+    if (anyBlocksOverlap(state.matrix, state.active_block)) {
+        return State{
+            .alive = false,
+            .matrix = state.matrix,
+            .active_block = state.active_block,
+            .next_block = state.next_block,
+            .score = state.score,
+        };
+    }
+    if (tryBlockDown(state)) |new_state| {
+        return new_state;
+    }
+    if (terminateRound(state, random_gen)) |new_state| {
+        return new_state;
+    }
+    return State{
+        .alive = false,
+        .matrix = state.matrix,
+        .active_block = state.active_block,
+        .next_block = state.next_block,
+        .score = state.score,
+    };
+}
+
+fn anyBlocksOverlap(matrix: [rows * cols]u16, active_block: u16) bool {
+    for (0..index(rows - 1, cols - 1) + 1) |idx| {
+        std.debug.assert(matrix[idx] >= 0);
+        if (matrix[idx] > active_block) {
+            return true;
+        }
+    }
+    return false;
 }
 
 fn createNewBlock(block: u16) [hidden_rows * cols]u16 {
@@ -227,7 +246,7 @@ fn tryMoveBlock(state: State, left: bool, right: bool, down: bool) ?State {
     };
 }
 
-fn blockRotate(state: State) State {
+fn rotateActiveBlock(state: State) State {
     var max_row: usize = 0;
     var min_row: usize = rows;
     var min_col: usize = cols;
@@ -272,16 +291,6 @@ fn blockRotate(state: State) State {
         .next_block = state.next_block,
         .score = state.score,
     };
-}
-
-fn anyBlocksOverlap(matrix: [rows * cols]u16, active_block: u16) bool {
-    for (0..index(rows - 1, cols - 1) + 1) |idx| {
-        std.debug.assert(matrix[idx] >= 0);
-        if (matrix[idx] > active_block) {
-            return true;
-        }
-    }
-    return false;
 }
 
 fn applyGravity(matrix: [rows * cols]u16, empty_row: usize) [rows * cols]u16 {
@@ -351,29 +360,4 @@ fn spawnNewBlock(matrix: [rows * cols]u16, new_block: u16) ?[rows * cols]u16 {
         new_matrix[idx] = hidden_area[idx];
     }
     return new_matrix;
-}
-
-fn step(state: State, random_gen: *std.rand.DefaultPrng) State {
-    if (anyBlocksOverlap(state.matrix, state.active_block)) {
-        return State{
-            .alive = false,
-            .matrix = state.matrix,
-            .active_block = state.active_block,
-            .next_block = state.next_block,
-            .score = state.score,
-        };
-    }
-    if (tryBlockDown(state)) |new_state| {
-        return new_state;
-    }
-    if (terminateRound(state, random_gen)) |new_state| {
-        return new_state;
-    }
-    return State{
-        .alive = false,
-        .matrix = state.matrix,
-        .active_block = state.active_block,
-        .next_block = state.next_block,
-        .score = state.score,
-    };
 }

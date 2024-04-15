@@ -56,7 +56,6 @@ pub fn renderGame(g: ?*Game, out: *std.BoundedArray(u8, 10000)) !void {
             }
         }
         try out.appendSlice("</div>");
-        // try out.appendSlice(@tagName(state.board.next_block_type));
         try out.appendSlice("</div></div>"); // end column
         try out.appendSlice("</div>"); // end row
     } else {
