@@ -10,6 +10,36 @@ pub const rows = 20 + 4;
 pub const cols = 10;
 pub const hidden_rows = 4;
 
+pub const block_patterns = [_][]const u8{
+    "0000000011110000", // I
+    "0000100011100000", // J
+    "0000000101110000", // L
+    "0000110001100000", // Z
+    "0000001101100000", // S
+    "0000010011100000", // T
+    "0000011001100000", // O
+};
+
+const State = struct {
+    alive: bool,
+    matrix: [rows * cols]u16,
+    active_block: u16,
+    next_block: u16,
+    score: u16,
+
+    pub fn getBlock(self: *const State, row: usize, col: usize) u16 {
+        return self.matrix[index(row, col)];
+    }
+};
+
+pub const Command = enum {
+    Left,
+    Right,
+    Rotate,
+    Down,
+    Drop,
+};
+
 random_gen: std.rand.DefaultPrng,
 state: AtomicValue(State),
 command_queue: AtomicQueue(Command, 3),
@@ -70,36 +100,6 @@ pub fn sendCommand(self: *Game, c: Command) void {
     self.command_queue.prepend(c);
 }
 
-pub const Command = enum {
-    Left,
-    Right,
-    Rotate,
-    Down,
-    Drop,
-};
-
-const State = struct {
-    alive: bool,
-    matrix: [rows * cols]u16,
-    active_block: u16,
-    next_block: u16,
-    score: u16,
-
-    pub fn getBlock(self: *const State, row: usize, col: usize) u16 {
-        return self.matrix[index(row, col)];
-    }
-};
-
-const BlockTypes = enum {
-    Hero, // I
-    BlueRicky, // J
-    OrangeRicky, // L
-    ClevelandZ, // Z
-    RhodeIslandZ, // S
-    Teewee, // T
-    Smashboy, // O
-};
-
 fn printState(self: *Game) void {
     const state = self.state.get();
     print("\n", .{});
@@ -153,52 +153,15 @@ fn handleCommand(state: State, command: Command) State {
 }
 
 fn createNewBlock(block: u16) [hidden_rows * cols]u16 {
-    const block_type: BlockTypes = @enumFromInt(block % 7);
     var area = [_]u16{0} ** (hidden_rows * cols);
     const center_col = cols / 2;
-    switch (block_type) {
-        .Hero => {
-            area[index(hidden_rows - 1, center_col - 1)] = block;
-            area[index(hidden_rows - 1, center_col)] = block;
-            area[index(hidden_rows - 1, center_col + 1)] = block;
-            area[index(hidden_rows - 1, center_col + 2)] = block;
-        },
-        .BlueRicky => {
-            area[index(hidden_rows - 1, center_col - 1)] = block;
-            area[index(hidden_rows - 1, center_col)] = block;
-            area[index(hidden_rows - 1, center_col + 1)] = block;
-            area[index(hidden_rows - 2, center_col - 1)] = block;
-        },
-        .OrangeRicky => {
-            area[index(hidden_rows - 2, center_col + 1)] = block;
-            area[index(hidden_rows - 1, center_col - 1)] = block;
-            area[index(hidden_rows - 1, center_col)] = block;
-            area[index(hidden_rows - 1, center_col + 1)] = block;
-        },
-        .ClevelandZ => {
-            area[index(hidden_rows - 2, center_col - 1)] = block;
-            area[index(hidden_rows - 2, center_col)] = block;
-            area[index(hidden_rows - 1, center_col)] = block;
-            area[index(hidden_rows - 1, center_col + 1)] = block;
-        },
-        .RhodeIslandZ => {
-            area[index(hidden_rows - 2, center_col)] = block;
-            area[index(hidden_rows - 2, center_col + 1)] = block;
-            area[index(hidden_rows - 1, center_col - 1)] = block;
-            area[index(hidden_rows - 1, center_col)] = block;
-        },
-        .Teewee => {
-            area[index(hidden_rows - 2, center_col)] = block;
-            area[index(hidden_rows - 1, center_col - 1)] = block;
-            area[index(hidden_rows - 1, center_col)] = block;
-            area[index(hidden_rows - 1, center_col + 1)] = block;
-        },
-        .Smashboy => {
-            area[index(hidden_rows - 2, center_col)] = block;
-            area[index(hidden_rows - 2, center_col + 1)] = block;
-            area[index(hidden_rows - 1, center_col)] = block;
-            area[index(hidden_rows - 1, center_col + 1)] = block;
-        },
+    const block_pattern = block_patterns[block % 7];
+    for (0..16) |i| {
+        const row = i / 4;
+        const col = center_col - 2 + (i % 4);
+        if (block_pattern[i] == '1') {
+            area[index(row, col)] = block;
+        }
     }
     return area;
 }

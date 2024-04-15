@@ -12,16 +12,6 @@ const colored_cells = [_][]const u8{
     "<div class='color6 cell'></div>",
 };
 
-const block_preview = [_][]const u8{
-    "0000000011110000", // I
-    "0000100011100000", // J
-    "0000000101110000", // L
-    "0000110001100000", // Z
-    "0000001101100000", // S
-    "0000010011100000", // T
-    "0000011001100000", // O
-};
-
 pub fn renderGame(g: ?*Game, out: *std.BoundedArray(u8, 10000)) !void {
     if (g) |game| {
         const state = game.state.get();
@@ -52,7 +42,7 @@ pub fn renderGame(g: ?*Game, out: *std.BoundedArray(u8, 10000)) !void {
         try out.appendSlice(score_string);
 
         try out.appendSlice("</div><div id='block_preview'>");
-        const pattern = block_preview[state.next_block % 7];
+        const pattern = tetris.block_patterns[state.next_block % 7];
         try out.appendSlice("<div>");
         for (0..16) |j| {
             if (pattern[j] == '1') {
