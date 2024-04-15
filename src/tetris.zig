@@ -6,10 +6,11 @@ const AtomicValue = @import("atomic_value.zig").AtomicValue;
 pub const Game = @This();
 
 // GLOBAL CONSTANTS
-pub const hidden_rows = 4;
+pub const hidden_rows = 4; // new blocks spawn in hidden zone
 pub const rows = 20 + hidden_rows;
 pub const cols = 10;
 
+// To be interpreted as 4x4 squares:
 pub const block_patterns = [_][]const u8{
     "0000000011110000", // I
     "0000100011100000", // J
