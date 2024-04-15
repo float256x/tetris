@@ -6,9 +6,9 @@ const AtomicValue = @import("atomic_value.zig").AtomicValue;
 pub const Game = @This();
 
 // GLOBAL CONSTANTS
-pub const rows = 20 + 4;
-pub const cols = 10;
 pub const hidden_rows = 4;
+pub const rows = 20 + hidden_rows;
+pub const cols = 10;
 
 pub const block_patterns = [_][]const u8{
     "0000000011110000", // I
