@@ -46,7 +46,9 @@ fn game_loop(self: *GameServer) void {
 }
 
 fn listen(self: *GameServer) !void {
-    var server = try self.address.listen(.{});
+    var server = try self.address.listen(.{
+        .reuse_address = true,
+    });
     defer server.deinit();
     while (true) {
         const connection = try server.accept();
