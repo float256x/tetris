@@ -14,4 +14,4 @@ Uses zig version `0.12.0-dev.3154+0b744da84`
 
 ## Author
 
-https://twitter.com/cptkn_
+https://x.com/float256
