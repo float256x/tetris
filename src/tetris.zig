@@ -24,6 +24,7 @@ pub const block_patterns = [_][]const u8{
 const State = struct {
     alive: bool,
     matrix: [rows * cols]u16,
+    step: u32,
     active_block: u16,
     next_block: u16,
     score: u16,
@@ -58,6 +59,7 @@ pub fn init() !Game {
     const state = State{
         .alive = true,
         .matrix = init_matrix,
+        .step = 0,
         .active_block = active_block,
         .next_block = next_block,
         .score = 0,
@@ -76,8 +78,7 @@ pub fn tick(self: *Game) bool {
     if (!state.alive) {
         return false;
     }
-    // TODO speed up over time
-    const step_interval_ms = 300;
+    const step_interval_ms = std.math.clamp(500 -| state.step * 4, 100, 500);
     const now = std.time.milliTimestamp();
     if (now - self.last_step_milli_timestamp > step_interval_ms) {
         self.last_step_milli_timestamp = now;
@@ -142,6 +143,7 @@ fn step(state: State, random_gen: *std.rand.DefaultPrng) State {
         return State{
             .alive = false,
             .matrix = state.matrix,
+            .step = state.step,
             .active_block = state.active_block,
             .next_block = state.next_block,
             .score = state.score,
@@ -156,6 +158,7 @@ fn step(state: State, random_gen: *std.rand.DefaultPrng) State {
     return State{
         .alive = false,
         .matrix = state.matrix,
+        .step = state.step,
         .active_block = state.active_block,
         .next_block = state.next_block,
         .score = state.score,
@@ -241,6 +244,7 @@ fn tryMoveBlock(state: State, left: bool, right: bool, down: bool) ?State {
     return State{
         .alive = state.alive,
         .matrix = new_matrix,
+        .step = state.step,
         .active_block = state.active_block,
         .next_block = state.next_block,
         .score = state.score,
@@ -288,6 +292,7 @@ fn rotateActiveBlock(state: State) State {
     return State{
         .alive = state.alive,
         .matrix = new_matrix,
+        .step = state.step,
         .active_block = state.active_block,
         .next_block = state.next_block,
         .score = state.score,
@@ -341,6 +346,7 @@ fn terminateRound(state: State, random_gen: *std.rand.DefaultPrng) ?State {
         return State{
             .alive = state.alive,
             .matrix = mat,
+            .step = state.step + 1,
             .active_block = new_active_block,
             .next_block = new_next_block,
             .score = new_score,
